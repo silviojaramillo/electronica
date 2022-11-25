@@ -23,6 +23,7 @@ void enableInt(float inputValueT, float inputValueC, int outputValue){
     return digitalWrite(outputValue, LOW);
   }
 }
+
 //Función para medir corriente
 float measureCurrent(int inputSensor){
   return inputSensor*4/1023;
