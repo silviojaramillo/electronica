@@ -20,8 +20,10 @@ int inputA = 22;
 int inputB = 23;
 
 //Pines para controlar las señales de la salida
-int outputC = 24;
-int outputD = 25;
+int outputAC = 24;
+int outputAD = 25;
+int outputBC = 26;
+int outputBD = 27;
 
 //Variables para guardar los valores de la tensiones de las entradas
 double mesureVoltageA;
@@ -32,7 +34,21 @@ double measureCurrentA;
 double measureCurrentB;
 
 //Lista para guardar los estados de los elementos
+int statesInOuts[] = {};
 
+//Definiendo las lecturas de los botones
+int button1 = 28;
+int button2 = 29;
+int button3 = 30;
+int button4 = 31;
+
+//Pines para encender leds en las entradas
+int ledInputA = 32;
+int ledInputB = 33;
+int ledOutputAC = 34;
+int ledOutputAD = 35;
+int ledOutputBC = 36;
+int ledOutputBD = 37;
 
 //Función para leer la tensión
 double measureVoltage(int valuePin){
@@ -57,10 +73,84 @@ int intputControl(int valueV, int valueC){
 }
 
 //Función para las salidas de las señales
-int outputsControl(){
+void outputsControl(int buttonPulse){
+    //A saliendo por C
+    if(buttonPulse == button1){
+        outputBC = LOW;
+        outputAC = HIGH;
+    //A saliendo por D
+    }
+    if(buttonPulse == button2){
+        outputBD = LOW;
+        outputAD = HIGH;
+    //B saliendo por C
+    }
+    if(buttonPulse == button3){
+        outputAC = LOW;
+        outputBC = HIGH;
+    //B saliendo por D
+    }
+    if(buttonPulse == button4){
+        outputAD = LOW;
+        outputBD = HIGH;
+    }
+}
+
+//Función para el sensor 1
+float measureOne(){
     return 0;
 }
 
+//Función para el sensor 2
+float measureTwo(){
+    return 0;
+}
+
+//Función para encender los leds cuando la tensión sea mayor a 1 Volt
+void onLed(int mesuare, int controlLed){
+
+    //Encender o apagar led entrada A
+    if(mesuare > 1 && controlLed == inputA){
+        ledInputA = HIGH;
+    }else{
+        ledInputA = LOW;
+    }
+
+    //Encender o apagar led entrada B
+    if(mesuare > 1 && controlLed == inputB){
+        ledInputB = HIGH;
+    }else{
+        ledInputB = LOW;
+    }
+
+    //Encender o apagar led salida AC
+    if(mesuare > 1 && controlLed == outputAC){
+        ledOutputAC = HIGH;
+    }else{
+        ledOutputAC = LOW;
+    }
+
+    //Encender o apagar led salida AD
+    if(mesuare > 1 && controlLed == outputAD){
+        ledOutputAD = HIGH;
+    }else{
+        ledOutputAD = LOW;
+    }
+
+    //Encender o apagar led salida BC
+    if(mesuare > 1 && controlLed == outputBC){
+        ledOutputBC = HIGH;
+    }else{
+        ledOutputBC = LOW;
+    }
+
+    //Encender o apagar led salida BD
+    if(mesuare > 1 && controlLed == outputBD){
+        ledOutputBD = HIGH;
+    }else{
+        ledOutputBD = LOW;
+    }
+}
 
 void setup(){
     
