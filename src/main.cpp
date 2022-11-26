@@ -61,8 +61,14 @@ double measureCurrent(int valuePin){
     return 0;
 }
 
+//Función para determinar qué botón se ha pulsado
+int buttonPressed(){
+    
+    return 0;
+}
+
 //Función para controlar el paso de la corriente en las entradas
-int intputControl(int valueV, int valueC){
+int inputControl(int valueV, int valueC){
     int outputFunction;
     if(valueV <= 5 && valueC < 1){
         outputFunction = HIGH;
@@ -92,6 +98,12 @@ void outputsControl(int buttonPulse){
     }
     if(buttonPulse == button4){
         outputAD = LOW;
+        outputBD = HIGH;
+    }
+
+    //Salidas por defecto
+    if(!button1 && !button2 && !button3 && !button4){
+        outputAC = HIGH;
         outputBD = HIGH;
     }
 }
@@ -184,4 +196,21 @@ void setup(){
 }
 void loop(){
 
+    //Se miden las tensiones y corrientes de las entradas
+    mesureVoltageA = measureVoltage(inputA);
+    measureCurrentA = measureCurrent(inputA);
+    mesureVoltageB = measureVoltage(inputB);
+    measureCurrentB = measureCurrent(inputB);
+
+    //De acuerdo a las lecturas se permite o no el paso de la corriente
+    inputA = inputControl(mesureVoltageA,measureCurrentA);
+    inputB = inputControl(mesureVoltageB,measureCurrentB);
+
+    //Se enciende los leds que indican la presencia de tensión en las entradas
+    onLed(mesureVoltageA,inputA);
+    onLed(mesureVoltageB,inputB);
+
+    //Se controla las salidas
+
+    //outputsControl();
 }
