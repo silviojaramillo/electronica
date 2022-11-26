@@ -153,7 +153,34 @@ void onLed(int mesuare, int controlLed){
 }
 
 void setup(){
-    
+
+    //Pines analógicos
+    pinMode(voltageA,INPUT);
+    pinMode(voltageB,INPUT);
+    pinMode(currentA,INPUT);
+    pinMode(currentB,INPUT);
+    pinMode(voltageC,INPUT);
+    pinMode(voltageD,INPUT);
+    pinMode(currentC,INPUT);
+    pinMode(currentD,INPUT);
+
+    //Pines digitales
+    pinMode(inputA,OUTPUT);
+    pinMode(inputB,OUTPUT);
+    pinMode(outputAC,OUTPUT);
+    pinMode(outputAD,OUTPUT);
+    pinMode(outputBC,OUTPUT);
+    pinMode(outputBD,OUTPUT);
+    pinMode(button1,OUTPUT);
+    pinMode(button2,OUTPUT);
+    pinMode(button3,OUTPUT);
+    pinMode(button4,OUTPUT);
+    pinMode(ledInputA,OUTPUT);
+    pinMode(ledInputB,OUTPUT);
+    pinMode(ledOutputAC,OUTPUT);
+    pinMode(ledOutputAD,OUTPUT);
+    pinMode(ledOutputBC,OUTPUT);
+    pinMode(ledOutputBD,OUTPUT);
 }
 void loop(){
 
