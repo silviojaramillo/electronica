@@ -1,4 +1,9 @@
 #include <Arduino.h>
+
+//Confioguraciones generales de la subestación
+unsigned long timePulse = 50;
+bool returnButton;
+
 //Pines para leer las tensiones de las entradas
 int voltageA = A0;
 int voltageB = A1;
@@ -30,41 +35,49 @@ double mesureVoltageA;
 double mesureVoltageB;
 
 //Variables para guardar los valores de las corrientes de las entradas
-double measureCurrentA;
-double measureCurrentB;
+float measureCurrentA = 0.0;
+float measureCurrentB = 0.0;
+
+//Lista para guardar los estados de los botones
+int stateButtons[10] = {HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH};
 
 //Lista para guardar los estados de los elementos
-int statesInOuts[] = {};
+int statesInOuts[5] = {LOW,LOW,LOW,LOW,LOW};
+
+//Lista para guardar los tiempos de cada botón
+unsigned long timerbuttons[5] = {0,0,0,0,0};
 
 //Definiendo las lecturas de los botones
 int button1 = 28;
 int button2 = 29;
 int button3 = 30;
 int button4 = 31;
+int button5 = 32;
 
 //Pines para encender leds en las entradas
-int ledInputA = 32;
-int ledInputB = 33;
-int ledOutputAC = 34;
-int ledOutputAD = 35;
-int ledOutputBC = 36;
-int ledOutputBD = 37;
+int ledInputA = 33;
+int ledInputB = 34;
+int ledOutputAC = 35;
+int ledOutputAD = 36;
+int ledOutputBC = 37;
+int ledOutputBD = 38;
 
+int on = LOW;
+int off = HIGH;
 //Función para leer la tensión
 double measureVoltage(int valuePin){
-    double volt = valuePin*10/1024;
+    double volt = valuePin*10/1023;
     return volt;
 }
 
 //Función para leer la corriente
-double measureCurrent(int valuePin){
-    return 0;
-}
-
-//Función para determinar qué botón se ha pulsado
-int buttonPressed(){
-    
-    return 0;
+float measureCurrent(int valuePin){
+    float amper = 0.0;
+    for (size_t i = 0; i < 500; i++){
+        amper = amper + ((analogRead(valuePin)*5.0/1023)-2.5)/0.185;
+    }
+    return amper/500;
+    amper = 0.0;
 }
 
 //Función para controlar el paso de la corriente en las entradas
@@ -82,29 +95,23 @@ int inputControl(int valueV, int valueC){
 void outputsControl(int buttonPulse){
     //A saliendo por C
     if(buttonPulse == button1){
-        outputBC = LOW;
-        outputAC = HIGH;
+        digitalWrite(outputBC,off);
+        digitalWrite(outputAC,on);
     //A saliendo por D
     }
     if(buttonPulse == button2){
-        outputBD = LOW;
-        outputAD = HIGH;
+        digitalWrite(outputBD,off);
+        digitalWrite(outputAD,on);
     //B saliendo por C
     }
     if(buttonPulse == button3){
-        outputAC = LOW;
-        outputBC = HIGH;
+        digitalWrite(outputAC,off);
+        digitalWrite(outputBC,on);
     //B saliendo por D
     }
     if(buttonPulse == button4){
-        outputAD = LOW;
-        outputBD = HIGH;
-    }
-
-    //Salidas por defecto
-    if(!button1 && !button2 && !button3 && !button4){
-        outputAC = HIGH;
-        outputBD = HIGH;
+        digitalWrite(outputAD,off);
+        digitalWrite(outputBD,on);
     }
 }
 
@@ -166,7 +173,7 @@ void onLed(int mesuare, int controlLed){
 
 void setup(){
 
-    //Pines analógicos
+    //Pines analógicos para toma de medidas
     pinMode(voltageA,INPUT);
     pinMode(voltageB,INPUT);
     pinMode(currentA,INPUT);
@@ -176,31 +183,67 @@ void setup(){
     pinMode(currentC,INPUT);
     pinMode(currentD,INPUT);
 
-    //Pines digitales
+    //Pines digitales para control de acciones
     pinMode(inputA,OUTPUT);
     pinMode(inputB,OUTPUT);
     pinMode(outputAC,OUTPUT);
     pinMode(outputAD,OUTPUT);
     pinMode(outputBC,OUTPUT);
     pinMode(outputBD,OUTPUT);
-    pinMode(button1,OUTPUT);
-    pinMode(button2,OUTPUT);
-    pinMode(button3,OUTPUT);
-    pinMode(button4,OUTPUT);
     pinMode(ledInputA,OUTPUT);
     pinMode(ledInputB,OUTPUT);
     pinMode(ledOutputAC,OUTPUT);
     pinMode(ledOutputAD,OUTPUT);
     pinMode(ledOutputBC,OUTPUT);
     pinMode(ledOutputBD,OUTPUT);
+
+    //Declarando los pines para leer las pulsaciones
+    pinMode(button1,INPUT_PULLUP);
+    pinMode(button2,INPUT_PULLUP);
+    pinMode(button3,INPUT_PULLUP);
+    pinMode(button4,INPUT_PULLUP);
+
+    //Iniciamos los relés apagados
+    digitalWrite(outputAC,on);
+    digitalWrite(outputAD,off);
+    digitalWrite(outputBC,off);
+    digitalWrite(outputBD,on);
+
+    //Entradas
+    digitalWrite(inputA,off);
+    digitalWrite(inputB,off);
+
+
+    //Iniciando la comunicación serial
+    Serial.begin(9600);
+}
+
+//Función para promediar la corriente
+float averageCurrent(){
+    return 0;
 }
 void loop(){
+    digitalWrite(inputA,on);
+    digitalWrite(inputB,on);
 
     //Se miden las tensiones y corrientes de las entradas
-    mesureVoltageA = measureVoltage(inputA);
-    measureCurrentA = measureCurrent(inputA);
-    mesureVoltageB = measureVoltage(inputB);
-    measureCurrentB = measureCurrent(inputB);
+    //mesureVoltageA = measureVoltage(inputA);
+    
+    
+    measureCurrentA = measureCurrent(currentA);
+    measureCurrentB = measureCurrent(currentB);
+    Serial.println("Corrientes de las entradas A y B ");
+    Serial.print(measureCurrentA - 0.5);
+    Serial.print("-------");
+    Serial.println(measureCurrentB - 0.3);
+
+    //Midiendo la tensión para realizar un ajuste
+    //Serial.println(((analogRead(currentA)*5.0/1024)-2.5)/0.185);
+    
+    //mesureVoltageB = measureVoltage(inputB);
+    /* measureCurrentB = measureCurrent(currentB);
+    Serial.print("Corriente de la entrada B: ");
+    Serial.println(measureCurrentB); */
 
     //De acuerdo a las lecturas se permite o no el paso de la corriente
     inputA = inputControl(mesureVoltageA,measureCurrentA);
@@ -210,100 +253,19 @@ void loop(){
     onLed(mesureVoltageA,inputA);
     onLed(mesureVoltageB,inputB);
 
-    //Se controla las salidas
-
-    //outputsControl();
+    //Se realiza la acción
+    if (digitalRead(button1) == LOW){
+        outputsControl(button1);
+    }else if(digitalRead(button1) == HIGH){
+        
+    }
+    if (digitalRead(button2) == LOW){
+        outputsControl(button2);
+    }
+    if (digitalRead(button3) == LOW){
+        outputsControl(button3);
+    }
+    if (digitalRead(button4) == LOW){
+        outputsControl(button4);
+    }
 }
-
-/* 
-
-
-#define APRETADO    0
-#define SUELTO      1
-#define APRETANDOLO 2
-#define SOLTANDOLO  3
-
-class BotonSimple {
-  private:
-    unsigned char pin;
-    unsigned char anterior, valor;
-    unsigned char estado;
-
-    unsigned long temporizador;
-    unsigned long tiempoRebote;
-  public:
-    BotonSimple(unsigned char _pin, unsigned long _tiempoRebote);
-    void actualizar();
-    int  leer();
-};
-
-BotonSimple::BotonSimple(unsigned char _pin, unsigned long _tiempoRebote=50) {
-  pin = _pin;
-  tiempoRebote = _tiempoRebote;
-  pinMode(pin, INPUT_PULLUP);
-  valor=HIGH; anterior=HIGH; estado=SUELTO;
-}
-
-void BotonSimple::actualizar() {
-  // NOTA: En el ejemplo original en vez de "pin" leia directamente el pin "2", con lo que el
-  // codigo no funciona correctamente con el pin que le hayamos asignado.
-  if ( valor==digitalRead(pin) ){
-    temporizador=0;
-  }
-  else
-  if ( temporizador==0 ) {
-    temporizador = millis();
-  }
-  else
-  if ( millis()-temporizador >= tiempoRebote ) {
-    valor = !valor;
-  }
-  if ( anterior==LOW  && valor==LOW  ) estado = APRETADO;
-  if ( anterior==LOW  && valor==HIGH ) estado = SOLTANDOLO;
-  if ( anterior==HIGH && valor==LOW  ) estado = APRETANDOLO;
-  if ( anterior==HIGH && valor==HIGH ) estado = SUELTO;
-  anterior = valor;
-}
-
-int BotonSimple::leer() { 
-  return estado;
-}
- 
-
-BotonSimple boton(12);
-BotonSimple boton1(10);
-BotonSimple boton2(11);
-
-void setup() {
-  Serial.begin(9600);
-  pinMode(13, OUTPUT);
-}
-  
-void loop() {
-  boton.actualizar();
-  switch ( boton.leer() ) {
-    case SUELTO: digitalWrite(13, LOW); break;
-    case APRETANDOLO: Serial.println("Acabas de apretar el boton"); break;
-    case APRETADO: digitalWrite(13, HIGH); break;
-    case SOLTANDOLO: Serial.println("Acabas de soltar el boton"); break;
-    default: break;
-  }
-  boton1.actualizar();
-  switch ( boton1.leer() ) {
-    case SUELTO: digitalWrite(13, LOW); break;
-    case APRETANDOLO: Serial.println("Acabas de apretar el boton 1"); break;
-    case APRETADO: digitalWrite(13, HIGH); break;
-    case SOLTANDOLO: Serial.println("Acabas de soltar el boton 1"); break;
-    default: break;
-  }
-  boton2.actualizar();
-  switch ( boton2.leer() ) {
-    case SUELTO: digitalWrite(13, LOW); break;
-    case APRETANDOLO: Serial.println("Acabas de apretar el boton 2"); break;
-    case APRETADO: digitalWrite(13, HIGH); break;
-    case SOLTANDOLO: Serial.println("Acabas de soltar el boton 2"); break;
-    default: break;
-  }
-}
-
- */
