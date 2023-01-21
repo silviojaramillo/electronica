@@ -40,15 +40,6 @@ float mesureVoltageB;
 float measureCurrentA = 0.0;
 float measureCurrentB = 0.0;
 
-//Lista para guardar los estados de los botones
-int stateButtons[10] = {HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH,HIGH};
-
-//Lista para guardar los estados de los elementos
-int statesInOuts[5] = {LOW,LOW,LOW,LOW,LOW};
-
-//Lista para guardar los tiempos de cada botón
-unsigned long timerbuttons[5] = {0,0,0,0,0};
-
 //Definiendo las lecturas de los botones
 int button1 = 28;
 int button2 = 29;
@@ -68,7 +59,7 @@ int on = LOW;
 int off = HIGH;
 //Función para leer la tensión
 float measureVoltage(int valuePin){
-    float volt = analogRead(valuePin)*25.0/1023;
+    float volt = analogRead(valuePin)*25.0/1024;
     return volt;
 }
 
@@ -76,21 +67,22 @@ float measureVoltage(int valuePin){
 float measureCurrent(int valuePin){
     float amper = 0.0;
     for (size_t i = 0; i < 100; i++){
-        amper = amper + ((analogRead(valuePin)*5.0/1023)-2.5)/0.185;
+        amper = amper + ((analogRead(valuePin)*5.0/1023)-2.6)/0.185;
     }
     return amper/100;
     amper = 0.0;
 }
 
 //Función para controlar el paso de la corriente en las entradas
-int inputControl(int valueV, int valueC){
+int inputControl(float valueV, float valueC){
     int outputFunction;
-    if(valueV <= 5 && valueC < 1){
-        outputFunction = HIGH;
+    if(valueV <= 5.0 && valueC < 1.0){
+        outputFunction = on;
     }else{
-        outputFunction = LOW;
+        outputFunction = off;
     }
     return outputFunction;
+    outputFunction = -1;
 }
 
 //Función para las salidas de las señales
@@ -173,7 +165,8 @@ void onLed(int mesuare, int controlLed){
     }
 }
 
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void setup(){
 
@@ -206,16 +199,17 @@ void setup(){
     pinMode(button2,INPUT_PULLUP);
     pinMode(button3,INPUT_PULLUP);
     pinMode(button4,INPUT_PULLUP);
+    pinMode(button5,INPUT_PULLUP);
 
-    //Iniciamos los relés apagados
+    //Iniciamos dos relés apagados y solo dos encendidos para definir dos salidas por defecto
     digitalWrite(outputAC,on);
     digitalWrite(outputAD,off);
     digitalWrite(outputBC,off);
     digitalWrite(outputBD,on);
 
     //Entradas
-    digitalWrite(inputA,off);
-    digitalWrite(inputB,off);
+    digitalWrite(inputA,on);
+    digitalWrite(inputB,on);
 
 
     //Iniciando la comunicación serial
@@ -230,40 +224,46 @@ float averageCurrent(){
     return 0;
 }
 void loop(){
-    digitalWrite(inputA,on);
-    digitalWrite(inputB,on);
     lcd.clear();
 
     //Se miden las tensiones y corrientes de las entradas
-    mesureVoltageA = measureVoltage(inputA);
-    mesureVoltageB = measureVoltage(inputB);
-    /* Serial.println("Tensiones de las entradas A y B ");
-    Serial.print(mesureVoltageA);
-    Serial.print("-------");
-    Serial.println(mesureVoltageB); */
-    
-    //Tensiones mostradas en la pantalla led
-    lcd.setCursor(0, 0);
-    lcd.print(mesureVoltageA);
-    lcd.setCursor(0, 1);
-    lcd.print(mesureVoltageB);
-    
+    mesureVoltageA = measureVoltage(voltageA);
+    mesureVoltageB = measureVoltage(voltageB);
     measureCurrentA = measureCurrent(currentA);
     measureCurrentB = measureCurrent(currentB);
-    /* Serial.println("Corrientes de las entradas A y B ");
-    Serial.print(measureCurrentA);
-    Serial.print("-------");
-    Serial.println(measureCurrentB); */
-    
-    //Corrientes mostradas en la pantalla led
-    lcd.setCursor(5, 0);
-    lcd.print(measureCurrentA);
-    lcd.setCursor(5, 1);
-    lcd.print(measureCurrentB);
+
+    //Se muestra los valores de las mediciones anteriores
+
+    //Tensiones A y B
+    lcd.setCursor(0,0);
+    lcd.print("VA=");
+    lcd.setCursor(3,0);
+    lcd.print(mesureVoltageA,2);
+    lcd.setCursor(8,0);
+    lcd.print("VB=");
+    lcd.setCursor(11,0);
+    lcd.print(mesureVoltageB,2);
+
+    //Corrientes A y B
+    lcd.setCursor(0,1);
+    lcd.print("IA=");
+    lcd.setCursor(3,1);
+    lcd.print(measureCurrentA,2);
+    lcd.setCursor(8,1);
+    lcd.print("IB=");
+    lcd.setCursor(11,1);
+    lcd.print(measureCurrentB,2);
 
     //De acuerdo a las lecturas se permite o no el paso de la corriente
-    inputA = inputControl(mesureVoltageA,measureCurrentA);
-    inputB = inputControl(mesureVoltageB,measureCurrentB);
+    /* inputA = inputControl(mesureVoltageA,measureCurrentA);
+    inputB = inputControl(mesureVoltageB,measureCurrentB); */
+    digitalWrite(inputA,inputControl(mesureVoltageA,measureCurrentA));
+    digitalWrite(inputB,inputControl(mesureVoltageB,measureCurrentB));
+
+    Serial.print("inputA = ");
+    Serial.println(digitalRead(inputA));
+    Serial.print("inputB = ");
+    Serial.println(digitalRead(inputB));
 
     //Se enciende los leds que indican la presencia de tensión en las entradas
     onLed(mesureVoltageA,inputA);
@@ -272,20 +272,26 @@ void loop(){
     //Se realiza la acción
     if (digitalRead(button1) == LOW){
         outputsControl(button1);
-    }else if(digitalRead(button1) == HIGH){
-        
+        Serial.println("btn1");
     }
     if (digitalRead(button2) == LOW){
         outputsControl(button2);
+        Serial.println("btn2");
     }
     if (digitalRead(button3) == LOW){
         outputsControl(button3);
+        Serial.println("btn3");
     }
     if (digitalRead(button4) == LOW){
         outputsControl(button4);
+        Serial.println("btn4");
     }
-
+    if (digitalRead(button5) == LOW){
+        //outputsControl(button5);
+        Serial.println("btn5");
+    }
+    
     //Leyendo los sensores
-    Serial.print("Fotoresistencia ");
-    Serial.println(analogRead(A4));
+
+    delay(300);
 }
