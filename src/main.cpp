@@ -128,13 +128,11 @@ const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void setup(){
-
     //Pines analógicos para toma de medidas
     pinMode(voltageA,INPUT);
     pinMode(voltageB,INPUT);
     pinMode(currentA,INPUT);
     pinMode(currentB,INPUT);
-
     //Pines digitales para control de acciones
     pinMode(inputA,OUTPUT);
     pinMode(inputB,OUTPUT);
@@ -142,42 +140,33 @@ void setup(){
     pinMode(outputAD,OUTPUT);
     pinMode(outputBC,OUTPUT);
     pinMode(outputBD,OUTPUT);
-
     //Declarando los pines para leer las pulsaciones
     pinMode(button1,INPUT_PULLUP);
     pinMode(button2,INPUT_PULLUP);
     pinMode(button3,INPUT_PULLUP);
     pinMode(button4,INPUT_PULLUP);
     pinMode(button5,INPUT_PULLUP);
-
     //Iniciamos dos relés apagados y solo dos encendidos para definir dos salidas por defecto
     digitalWrite(outputAC,on);
     digitalWrite(outputAD,off);
     digitalWrite(outputBC,off);
     digitalWrite(outputBD,on);
-
     //Entradas encendidas por defecto
     digitalWrite(inputA,on);
     digitalWrite(inputB,on);
-
-
     //Iniciando la comunicación serial
     Serial.begin(9600);
-
     //Para mostrar datos en la pantalla
     lcd.begin(16, 2);
 }
 
 void loop(){
-
     //Se miden las tensiones y corrientes de las entradas
     mesureVoltageA = measureVoltage(voltageA);
     mesureVoltageB = measureVoltage(voltageB);
     measureCurrentA = measureCurrent(currentA);
     measureCurrentB = measureCurrent(currentB);
-
     //Se muestra los valores de las mediciones anteriores
-
     if(counter == 0){
         lcd.clear();
         //Tensiones A y B
@@ -189,7 +178,6 @@ void loop(){
         lcd.print("VB=");
         lcd.setCursor(11,0);
         lcd.print(mesureVoltageB,2);
-
         //Corrientes A y B
         lcd.setCursor(0,1);
         lcd.print("IA=");
@@ -246,37 +234,28 @@ void loop(){
             lcd.setCursor(6,1);
             lcd.print(analogRead(ft));
         }
-
     digitalWrite(inputA,inputControl(mesureVoltageA,measureCurrentA));
     digitalWrite(inputB,inputControl(mesureVoltageB,measureCurrentB));
-
     //Se realiza la acción
     if (digitalRead(button1) == LOW){
         outputsControl(button1);
-        Serial.println("btn1");
     }
     if (digitalRead(button2) == LOW){
         outputsControl(button2);
-        Serial.println("btn2");
     }
     if (digitalRead(button3) == LOW){
         outputsControl(button3);
-        Serial.println("btn3");
     }
     if (digitalRead(button4) == LOW){
         outputsControl(button4);
-        Serial.println("btn4");
     }
     if (digitalRead(button5) == LOW){
-        Serial.println("btn5");
         if(counter <= 2){
             counter ++;
         }else{
             counter = 0;
         }
     }
-    
-    //Leyendo los sensores
-
+    // Se da un pequeño delay para que los valores se muestren correctamente en la pantalla lcd.
     delay(300);
 }
