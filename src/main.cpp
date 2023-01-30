@@ -47,6 +47,8 @@ int button5 = 32;
 // Contador para mostrar los valores en la pantalla
 int counter = 0;
 
+// Encender led con la fotorresistencia
+int ftled = 40;
 
 int on = LOW;
 int off = HIGH;
@@ -82,6 +84,7 @@ int inputControl(float valueV, float valueC){
 //Función para las salidas de las señales
 void outputsControl(int buttonPulse){
     //A saliendo por C
+    //B saliendo por D
     if(buttonPulse == button1){
         digitalWrite(outputAD,off);
         digitalWrite(outputBC,off);
@@ -89,26 +92,13 @@ void outputsControl(int buttonPulse){
         digitalWrite(outputAC,on);
         
     //A saliendo por D
+    //B saliendo por C
     }
     if(buttonPulse == button2){
         digitalWrite(outputAC,off);
         digitalWrite(outputBD,off);
         digitalWrite(outputAD,on);
         digitalWrite(outputBC,on);
-    //B saliendo por C
-    }
-    if(buttonPulse == button3){
-        digitalWrite(outputBD,off);
-        digitalWrite(outputAC,off);
-        digitalWrite(outputAD,on);
-        digitalWrite(outputBC,on);
-    //B saliendo por D
-    }
-    if(buttonPulse == button4){
-        digitalWrite(outputBC,off);
-        digitalWrite(outputAD,off);
-        digitalWrite(outputAC,on);
-        digitalWrite(outputBD,on);
     }
 }
 
@@ -121,7 +111,7 @@ void outputsControl(int buttonPulse){
 // Función para leer el valor de la fotorresistencia
   float measureTwo(int valuePin){
     int resistor = analogRead(valuePin);
-      return resistor*5/1023;
+      return resistor*5.0/1023;
   }
 
 const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
@@ -229,10 +219,6 @@ void loop(){
             lcd.print("FT=");
             lcd.setCursor(10,0);
             lcd.print(measureTwo(ft),2);
-            lcd.setCursor(0,1);
-            lcd.print("valft=");
-            lcd.setCursor(6,1);
-            lcd.print(analogRead(ft));
         }
     digitalWrite(inputA,inputControl(mesureVoltageA,measureCurrentA));
     digitalWrite(inputB,inputControl(mesureVoltageB,measureCurrentB));
@@ -244,17 +230,18 @@ void loop(){
         outputsControl(button2);
     }
     if (digitalRead(button3) == LOW){
-        outputsControl(button3);
+        counter = 0;
     }
     if (digitalRead(button4) == LOW){
-        outputsControl(button4);
+        counter = 1;
     }
     if (digitalRead(button5) == LOW){
-        if(counter <= 2){
-            counter ++;
-        }else{
-            counter = 0;
-        }
+        counter = 2;
+    }
+    if(measureTwo(ft) < 1.15){
+        digitalWrite(ftled,HIGH);
+    }else{
+        digitalWrite(ftled,LOW);
     }
     // Se da un pequeño delay para que los valores se muestren correctamente en la pantalla lcd.
     delay(300);
