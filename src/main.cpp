@@ -72,7 +72,7 @@ float measureCurrent(int valuePin){
 //Función para controlar el paso de la corriente en las entradas
 int inputControl(float valueV, float valueC){
     int outputFunction;
-    if(valueV <= 5.5 && valueC < 1.0){
+    if(valueV <= 5.1 && valueC < 1.0){
         outputFunction = on;
     }else{
         outputFunction = off;
